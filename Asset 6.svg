@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 221.76 88.33">
+    <defs>
+        <style>
+            .cls-1,
+            .cls-2 {
+                fill: #ffed00;
+                stroke: #e94e1b;
+                stroke-miterlimit: 10;
+            }
+
+            .cls-1 {
+                stroke-linecap: round;
+            }
+        </style>
+    </defs>
+    <title>Asset 6</title>
+    <g id="Layer_2" data-name="Layer 2">
+        <g id="Layer_1-2" data-name="Layer 1">
+            <polygon class="cls-1" points="1.17 23.04 1.17 87.09 22.04 65.3 22.04 1.25 1.17 23.04" />
+            <polygon class="cls-1" points="43.73 55.53 1.17 55.53 22.04 33.74 64.61 33.74 43.73 55.53" />
+            <polygon class="cls-1" points="86.33 87.09 43.73 55.53 64.61 33.74 107.2 65.3 86.33 87.09" />
+            <polygon class="cls-1" points="86.33 23.04 86.33 87.09 107.2 65.3 107.2 1.25 86.33 23.04" />
+            <polygon class="cls-2" points="199.71 87.09 114.56 87.09 135.43 65.3 220.59 65.3 199.71 87.09" />
+            <polygon class="cls-2" points="114.56 23.04 199.71 87.09 220.59 65.3 135.43 1.25 114.56 23.04" />
+            <polygon class="cls-2" points="199.71 23.04 114.56 23.04 135.43 1.25 220.59 1.25 199.71 23.04" />
+        </g>
+    </g>
+</svg>

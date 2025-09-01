@@ -1,0 +1,4 @@
+Processador AMD Ryzen 9 9900X, 4.4 GHz (5.6 GHz), Cache 64 MB, 12 Núcleos, 24 Threads, AM5 - 100-100000662WOF = R$ 2.599,99
+
+Processador Intel Core Ultra 7-265KF, 5.5GHz, Até 20 Núcleos, Com suporte a PCIe 5.0 e 4.0 e suporte a DDR5 - BX80768265KF - R$ 2.249,99
+Inno3D RTX 5060 Twin X2 NVIDIA Geforce, 8GB, 2527MHz, 128bits, FP4 e DLSS 4, Ray Tracing - N50602-08D7X-195070N - R$ 2.199,99
