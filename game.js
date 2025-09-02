@@ -442,16 +442,28 @@ const lvlppDiv = document.getElementById("lvlpp");
     showGameModal()
     // modal.classList.remove('hidden'); 
     // modal.style.display = "block";
-    playerMoveDisplay.innerText = ["Rock", "Paper", "Scissors"][playerMove];
-    roundResult.innerText = "";
+   const moveImages = {
+  Rock: "rock.png",
+  Paper: "paper.png",
+  Scissors: "SS.png"
+};
 
-    // anima alternando o contrato
-    let moves = ["Rock", "Paper", "Scissors"];
-    let idx = 0;
-    const interval = setInterval(() => {
-      contractMoveDisplay.innerText = moves[idx % 3];
-      idx++;
-    }, 500);
+let moves = ["Rock", "Paper", "Scissors"];
+
+// player move
+let playerChoice = moves[playerMove];
+playerMoveDisplay.innerHTML = `<img src="${moveImages[playerChoice]}" alt="${playerChoice}" width="80">`;
+
+// limpa o resultado
+roundResult.innerText = "";
+
+// anima alternando o contrato
+let idx = 0;
+const interval = setInterval(() => {
+  let currentMove = moves[idx % 3];
+  contractMoveDisplay.innerHTML = `<img src="${moveImages[currentMove]}" alt="${currentMove}" width="80">`;
+  idx++;
+}, 200);        
 
     try {
       // envia transação
