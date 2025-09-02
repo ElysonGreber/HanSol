@@ -429,148 +429,46 @@ const lvlppDiv = document.getElementById("lvlpp");
     }
 
     //==========================================================================// 
+
     document.querySelectorAll(".moveBtn").forEach(btn => {
-  btn.addEventListener("click", async () => {
-    const playerMove = parseInt(btn.getAttribute("data-move"));
-    btn.disabled = true;
+        btn.addEventListener("click", async() => {
+            const playerMove = parseInt(btn.getAttribute("data-move"));
+            resultDiv.innerText = "Sending move...";
+            btn.disabled = true;
 
-    // abrir modal
-    const modal = document.getElementById("gameModal");
-    const playerMoveDisplay = document.getElementById("playerMoveDisplay");
-    const contractMoveDisplay = document.getElementById("contractMoveDisplay");
-    const roundResult = document.getElementById("roundResult");
-    showGameModal()
-    // modal.classList.remove('hidden'); 
-    // modal.style.display = "block";
-    playerMoveDisplay.innerText = ["Rock", "Paper", "Scissors"][playerMove];
-    roundResult.innerText = "";
+            try {
+                const instruction = await createInstruction(publicKey, playerMove);
 
-    // anima alternando o contrato
-    let moves = ["Rock", "Paper", "Scissors"];
-    let idx = 0;
-    const interval = setInterval(() => {
-      contractMoveDisplay.innerText = moves[idx % 3];
-      idx++;
-    }, 500);
+                const transaction = new Transaction().add(instruction);
+                transaction.feePayer = publicKey;
+                const { blockhash } = await connection.getLatestBlockhash();
+                transaction.recentBlockhash = blockhash;
 
-    try {
-      // envia transação
-      const instruction = await createInstruction(publicKey, playerMove);
-      const transaction = new Transaction().add(instruction);
-      transaction.feePayer = publicKey;
-      const { blockhash } = await connection.getLatestBlockhash();
-      transaction.recentBlockhash = blockhash;
+                const signedTx = await provider.signTransaction(transaction);
+                const signature = await connection.sendRawTransaction(signedTx.serialize());
+                await connection.confirmTransaction(signature, "confirmed");
 
-      const signedTx = await provider.signTransaction(transaction);
-      const signature = await connection.sendRawTransaction(signedTx.serialize());
-      await connection.confirmTransaction(signature, "confirmed");
+                await updateScore();
+                await updateHistory();
 
-      await updateScore();
-      await updateHistory();
+                const txDetails = await connection.getTransaction(signature, { commitment: "confirmed" });
+                let logHtml = `📄 Transaction Log\n`;
+                logHtml += `Signature: ${signature}\n`;
+                logHtml += `Slot: ${txDetails.slot}\n`;
+                logHtml += `Status: ${txDetails.meta?.err ? "Failed ❌" : "Confirmed ✅"}\n`;
+                logHtml += `Fee paid: ${(txDetails.meta?.fee || 0) / 1e9} SOL\n`;
+                logHtml += `\n--- Program Logs ---\n${(txDetails.meta?.logMessages || []).join("\n")}\n`;
+                logHtml += `\n🔗 Explorer: https://explorer.solana.com/tx/${signature}?cluster=devnet`;
+                document.getElementById("txLog").textContent = logHtml;
 
-      const txDetails = await connection.getTransaction(signature, { commitment: "confirmed" });
-
-      // aqui supondo que o contrato retorna um log com o move
-      const logs = txDetails.meta?.logMessages || [];
-      const contractMoveIndex = parseInt(logs.find(l => l.includes("ContractMove:"))?.split(":")[1] || 0);
-      const contractMove = moves[contractMoveIndex];
-
-      // para a animação e mostra o resultado real
-      clearInterval(interval);
-      contractMoveDisplay.innerText = contractMove;
-
-      // resultado da rodada
-      let outcome;
-      if (playerMove === contractMoveIndex) outcome = "Draw";
-      else if (
-        (playerMove === 0 && contractMoveIndex === 2) || // Rock vence Scissors
-        (playerMove === 1 && contractMoveIndex === 0) || // Paper vence Rock
-        (playerMove === 2 && contractMoveIndex === 1)    // Scissors vence Paper
-      ) {
-        outcome = "Won";
-      } else {
-        outcome = "Lose";
-      }
-      roundResult.innerText = outcome;
-
-    } catch (e) {
-      clearInterval(interval);
-      contractMoveDisplay.innerText = "Error";
-      roundResult.innerText = e.message;
-    } finally {
-      btn.disabled = false;
-    }
-  });
-});
-
-// fechar modal
-// document.getElementById("closeModal").onclick = () => {
-//   document.getElementById("gameModal").classList.add('hidden');};
-    
-    const closeModal = document.getElementById("closeModal");
-
-  
-   function showGameModal() {
-            gameModal.classList.remove('hidden');
-            document.body.classList.add('modal-open');
-        }
-
-        function hideGameModal() {
-            document.getElementById("gameModal").classList.add('hidden');
-            document.body.classList.remove('modal-open');
-        }
-    closeModal.addEventListener('click', hideGameModal);
-
-    // document.querySelectorAll(".moveBtn").forEach(btn => {
-    //     btn.addEventListener("click", async() => {
-    //         const playerMove = parseInt(btn.getAttribute("data-move"));
-    //         resultDiv.innerText = "Sending move...";
-    //         btn.disabled = true;
-
-    //         try {
-    //             const instruction = await createInstruction(publicKey, playerMove);
-
-    //             const transaction = new Transaction().add(instruction);
-    //             transaction.feePayer = publicKey;
-    //             const { blockhash } = await connection.getLatestBlockhash();
-    //             transaction.recentBlockhash = blockhash;
-
-    //             const signedTx = await provider.signTransaction(transaction);
-    //             const signature = await connection.sendRawTransaction(signedTx.serialize());
-    //             await connection.confirmTransaction(signature, "confirmed");
-
-    //             await updateScore();
-    //             await updateHistory();
-
-    //             const txDetails = await connection.getTransaction(signature, { commitment: "confirmed" });
-
-    //             let logHtml = `
-    //               <div class="tx-logint">
-    //                 <h3>Transaction Log</h3>
-    //                 <p><strong>Signature:</strong> ${signature}</p>
-    //                 <p><strong>Slot:</strong> ${txDetails.slot}</p>
-    //                 <p><strong>Status:</strong> ${txDetails.meta?.err ? "Failed" : "Confirmed"}</p>
-    //                 <p><strong>Fee paid:</strong> ${(txDetails.meta?.fee || 0) / 1e9} SOL</p>
-
-    //                 <h4>Program Logs</h4>
-    //                 <pre>${(txDetails.meta?.logMessages || []).join("\n")}</pre>
-
-    //                 <p><a href="https://explorer.solana.com/tx/${signature}?cluster=devnet" target="_blank">
-    //                   View on Solana Explorer
-    //                 </a></p>
-    //               </div>
-    //             `;
-
-    //             document.getElementById("txLog").innerHTML = logHtml;
-
-    //             resultDiv.innerText = `Move sent: ${["Rock", "Paper", "Scissors"][playerMove]}`;
-    //         } catch (e) {
-    //             resultDiv.innerText = "Error: " + e.message;
-    //         } finally {
-    //             btn.disabled = false;
-    //         }
-    //     });
-    // });
+                resultDiv.innerText = `Move sent: ${["Rock", "Paper", "Scissors"][playerMove]}`;
+            } catch (e) {
+                resultDiv.innerText = "Error: " + e.message;
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    });
 
     //==========================================================================// 
 
@@ -835,55 +733,6 @@ document.querySelectorAll(".connectBtn").forEach(btn => {
 
         rankingTable.style.display = "table";
         rankingStatus.innerText = "";
-        // pegar os top 3
-        const docs = querySnapshot.docs;
-        const top3 = docs.slice(0, 3).map((doc, i) => {
-            const data = doc.data();
-            return {
-                rank: i + 1,
-                pubkey: data.pubkey || doc.id,
-                nickname: data.nickname || "(sem apelido)",
-                score: data.score ?? 0
-            };
-        });
-
-        // preencher cada div (se existir no HTML)
-        if (top3[0]) {
-            document.getElementById("primeiro").innerHTML = `
-                    <div class="rtopplace"><h3>1º</h3></div>
-                    <div>
-                     <div class="rtopnick"><p> ${top3[0].nickname}</p></div>
-                    <div class="rtopk"><p> ${maskPubkey(top3[0].pubkey)}</p></div>
-                    </div>
-                    <div class="rtopp"><p><b>Points:</b> ${top3[0].score}</p></div>
-                    
-               
-            `;
-        }
-        if (top3[1]) {
-            document.getElementById("segundo").innerHTML = `
-              
-                    <div class="rtopplace"><h3>2º</h3></div>
-                    <div>
-                    <div class="rtopnick"><p> ${top3[1].nickname}</p></div>
-                    <div class="rtopk"><p> ${maskPubkey(top3[1].pubkey)}</p></div>
-                    </div>
-                    <div class="rtopp"><p><b>Points:</b> ${top3[1].score}</p></div>
-                    
-               
-            `;
-        }
-        if (top3[2]) {
-            document.getElementById("terceiro").innerHTML = `
-
-                    <div class="rtopplace"><h3>3º</h3></div>
-                    <div>
-                     <div class="rtopnick"><p> ${top3[2].nickname}</p></div>
-                    <div class="rtopk"><p> ${maskPubkey(top3[2].pubkey)}</p></div>
-                    </div>
-                    <div class="rtopp"><p><b>Points:</b> ${top3[2].score}</p></div>
-            `;
-        }
 
         // exibe posição do usuário logado
         if (myRank !== null) {
@@ -899,8 +748,5 @@ document.querySelectorAll(".connectBtn").forEach(btn => {
         }
     }
     refreshRankingBtn.onclick = loadRanking;
-    window.addEventListener("DOMContentLoaded", () => {
-    loadRanking();
-});
 
 })();

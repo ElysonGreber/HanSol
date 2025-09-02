@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Criador de Tabelas — Produtos</title>
+    <style>
+         :root {
+            --bg: #0f1724;
+            --card: #0b1220;
+            --muted: #94a3b8;
+            --accent: #06b6d4;
+            --accent-2: #60a5fa
+        }
+        
+        * {
+            box-sizing: border-box
+        }
+        
+        body {
+            font-family: Inter, Segoe UI, Roboto, system-ui, Arial;
+            margin: 0;
+            background: linear-gradient(180deg, #071025 0%, #071728 100%);
+            color: #e6eef6;
+            padding: 24px
+        }
+        
+        h1 {
+            font-size: 20px;
+            margin: 0 0 12px
+        }
+        
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 16px
+        }
+        
+        button {
+            background: var(--accent);
+            border: 0;
+            color: #04202a;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600
+        }
+        
+        button.secondary {
+            background: transparent;
+            color: var(--accent-2);
+            border: 1px solid rgba(255, 255, 255, 0.06)
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px
+        }
+        
+        .table-card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+            padding: 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.03)
+        }
+        
+        .table-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px
+        }
+        
+        .table-head input.title {
+            background: transparent;
+            border: none;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.04);
+            color: inherit;
+            padding: 4px 6px;
+            font-size: 16px
+        }
+        
+        .controls {
+            display: flex;
+            gap: 8px
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px
+        }
+        
+        th,
+        td {
+            padding: 8px 6px;
+            text-align: left;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.03);
+            font-size: 14px
+        }
+        
+        th {
+            color: var(--muted);
+            font-weight: 600
+        }
+        
+        td input[type=text],
+        td input[type=number] {
+            width: 100%;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            padding: 6px 8px;
+            border-radius: 6px;
+            color: inherit
+        }
+        
+        td a {
+            color: var(--accent-2);
+            text-decoration: none
+        }
+        
+        .row-actions button {
+            background: #1b2a3a;
+            color: #dff3fb;
+            padding: 6px 8px;
+            border-radius: 6px
+        }
+        
+        .summary {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 8px;
+            gap: 12px;
+            color: var(--muted)
+        }
+        
+        .total {
+            font-size: 18px;
+            color: var(--accent-2);
+            font-weight: 700
+        }
+        
+        .empty {
+            opacity: 0.6;
+            font-size: 14px;
+            padding: 12px 0
+        }
+        
+        .help {
+            font-size: 13px;
+            color: var(--muted)
+        }
+        
+        footer {
+            margin-top: 18px;
+            color: var(--muted);
+            font-size: 13px
+        }
+        
+        @media(min-width:900px) {
+            .container {
+                grid-template-columns: repeat(2, 1fr)
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Criador de Tabelas — itens (nome, link, tipo, preço)</h1>
+    <div class="toolbar">
+        <button id="newTableBtn">+ Nova Tabela</button>
+        <button class="secondary" id="exportAll">Exportar JSON</button>
+        <div style="margin-left:auto" class="help">Adicione quantas tabelas quiser. Os totais são atualizados automaticamente.</div>
+    </div>
+
+    <div class="container" id="tablesContainer">
+        <!-- Tabelas serão inseridas aqui -->
+    </div>
+
+    <footer>Feito rápido — clique em uma tabela para editar título. Preço em reais (use ponto ou vírgula). </footer>
+
+    <script>
+        // Helpers
+        const formatCurrencyBRL = v => {
+            if (isNaN(v)) return 'R$ 0,00'
+            return v.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            })
+        }
+
+        const uid = () => Math.random().toString(36).slice(2, 9)
+
+        // Templates
+        function createTableCard(id, title = 'Tabela ' + (document.querySelectorAll('.table-card').length + 1)) {
+            const card = document.createElement('div')
+            card.className = 'table-card'
+            card.dataset.id = id
+            card.innerHTML = `
+        <div class="table-head">
+          <input class="title" value="${escapeHtml(title)}" />
+          <div class="controls">
+            <button class="addRow">+ Linha</button>
+            <button class="removeTable secondary">Remover</button>
+          </div>
+        </div>
+        <div class="table-body">
+          <table>
+            <thead>
+              <tr><th>Nome</th><th>Link</th><th>Tipo</th><th>Preço (R$)</th><th></th></tr>
+            </thead>
+            <tbody class="tbody"></tbody>
+          </table>
+          <div class="empty">Nenhuma linha — clique em "+ Linha" para adicionar.</div>
+          <div class="summary">Total: <div class="total">R$ 0,00</div></div>
+        </div>
+      `
+            attachTableListeners(card)
+            return card
+        }
+
+        function escapeHtml(s) {
+            return (s + '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": "&#39;"
+            })[c])
+        }
+
+        // Core
+        const container = document.getElementById('tablesContainer')
+
+        function attachTableListeners(card) {
+            const addRowBtn = card.querySelector('.addRow')
+            const removeTableBtn = card.querySelector('.removeTable')
+            const tbody = card.querySelector('.tbody')
+            const empty = card.querySelector('.empty')
+            const totalEl = card.querySelector('.total')
+            const titleInput = card.querySelector('.title')
+
+            function recalc() {
+                const rows = Array.from(tbody.querySelectorAll('tr'))
+                let sum = 0
+                rows.forEach(tr => {
+                    const priceInput = tr.querySelector('.price')
+                    let v = parseFloat(String(priceInput.value).replace(',', '.'))
+                    if (isNaN(v)) v = 0
+                    sum += v
+                })
+                totalEl.textContent = formatBRL(sum)
+                card.dataset.total = String(sum)
+                empty.style.display = rows.length ? 'none' : 'block'
+            }
+
+            addRowBtn.addEventListener('click', () => {
+                const tr = document.createElement('tr')
+                tr.innerHTML = `
+          <td><input class="name" type="text" placeholder="Nome" /></td>
+          <td><input class="link" type="text" placeholder="https://..." /></td>
+          <td><input class="tipo" type="text" placeholder="Tipo" /></td>
+          <td><input class="price" type="number" step="0.01" placeholder="0.00" /></td>
+          <td class="row-actions"><button class="del">Excluir</button></td>
+        `
+                tbody.appendChild(tr)
+                    // events
+                tr.querySelector('.price').addEventListener('input', recalc)
+                tr.querySelector('.del').addEventListener('click', () => {
+                        tr.remove();
+                        recalc()
+                    })
+                    // make link clickable when typed
+                const linkInput = tr.querySelector('.link')
+                linkInput.addEventListener('change', () => {
+                    const val = linkInput.value.trim()
+                    if (val && !/^https?:\/\//i.test(val)) linkInput.value = 'https://' + val
+                })
+                recalc()
+            })
+
+            removeTableBtn.addEventListener('click', () => {
+                if (!confirm('Remover essa tabela?')) return
+                card.remove()
+            })
+
+            // Inline edit title saves to dataset
+            titleInput.addEventListener('input', () => {
+                card.dataset.title = titleInput.value
+            })
+
+            // initial recalc
+            recalc()
+        }
+
+        // Actions
+        document.getElementById('newTableBtn').addEventListener('click', () => {
+            const id = uid()
+            const card = createTableCard(id)
+            container.prepend(card)
+                // auto add one sample row
+            card.querySelector('.addRow').click()
+        })
+
+        document.getElementById('exportAll').addEventListener('click', () => {
+            const data = []
+            document.querySelectorAll('.table-card').forEach(card => {
+                const title = card.querySelector('.title').value
+                const rows = []
+                card.querySelectorAll('tbody tr').forEach(tr => {
+                    const name = tr.querySelector('.name').value
+                    const link = tr.querySelector('.link').value
+                    const tipo = tr.querySelector('.tipo').value
+                    const price = parseFloat(String(tr.querySelector('.price').value).replace(',', '.')) || 0
+                    rows.push({
+                        name,
+                        link,
+                        tipo,
+                        price
+                    })
+                })
+                const total = parseFloat(card.dataset.total) || 0
+                data.push({
+                    id: card.dataset.id,
+                    title,
+                    rows,
+                    total
+                })
+            })
+            const blob = new Blob([JSON.stringify(data, null, 2)], {
+                type: 'application/json'
+            })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = 'tabelas.json'
+            a.click()
+            URL.revokeObjectURL(url)
+        })
+
+        // create an initial table
+        document.getElementById('newTableBtn').click()
+    </script>
+</body>
+
+</html>
+<footer>Feito rápido — clique em uma tabela para editar título. Preço em reais (use ponto ou vírgula). </footer>
+
+<script>
+    // Helpers
+    const formatBRL = v => {
+        if (isNaN(v)) return 'R$ 0,00'
+        return v.toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        })
+    }
+
+    const generateUid = () => Math.random().toString(36).slice(2, 9)
+
+    // Templates
+    function createTableCard(id, title = 'Tabela ' + (document.querySelectorAll('.table-card').length + 1)) {
+        const card = document.createElement('div')
+        card.className = 'table-card'
+        card.dataset.id = id
+        card.innerHTML = `
+        <div class="table-head">
+          <input class="title" value="${escapeHtml(title)}" />
+          <div class="controls">
+            <button class="addRow">+ Linha</button>
+            <button class="removeTable secondary">Remover</button>
+          </div>
+        </div>
+        <div class="table-body">
+          <table>
+            <thead>
+              <tr><th>Nome</th><th>Link</th><th>Tipo</th><th>Preço (R$)</th><th></th></tr>
+            </thead>
+            <tbody class="tbody"></tbody>
+          </table>
+          <div class="empty">Nenhuma linha — clique em "+ Linha" para adicionar.</div>
+          <div class="summary">Total: <div class="total">R$ 0,00</div></div>
+        </div>
+      `
+        attachTableListeners(card)
+        return card
+    }
+
+    function escapeHtml(s) {
+        return (s + '').replace(/[&<>"']/g, c => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": "&#39;"
+        })[c])
+    }
+
+    // Core
+    const tablesContainer = document.getElementById('tablesContainer')
+
+    function attachTableListeners(card) {
+        const addRowBtn = card.querySelector('.addRow')
+        const removeTableBtn = card.querySelector('.removeTable')
+        const tbody = card.querySelector('.tbody')
+        const empty = card.querySelector('.empty')
+        const totalEl = card.querySelector('.total')
+        const titleInput = card.querySelector('.title')
+
+        function recalc() {
+            const rows = Array.from(tbody.querySelectorAll('tr'))
+            let sum = 0
+            rows.forEach(tr => {
+                const priceInput = tr.querySelector('.price')
+                let v = parseFloat(String(priceInput.value).replace(',', '.'))
+                if (isNaN(v)) v = 0
+                sum += v
+            })
+            totalEl.textContent = formatBRL(sum)
+            card.dataset.total = String(sum)
+            empty.style.display = rows.length ? 'none' : 'block'
+        }
+
+        addRowBtn.addEventListener('click', () => {
+            const tr = document.createElement('tr')
+            tr.innerHTML = `
+          <td><input class="name" type="text" placeholder="Nome" /></td>
+          <td><input class="link" type="text" placeholder="https://..." /></td>
+          <td><input class="tipo" type="text" placeholder="Tipo" /></td>
+          <td><input class="price" type="number" step="0.01" placeholder="0.00" /></td>
+          <td class="row-actions"><button class="del">Excluir</button></td>
+        `
+            tbody.appendChild(tr)
+                // events
+            tr.querySelector('.price').addEventListener('input', recalc)
+            tr.querySelector('.del').addEventListener('click', () => {
+                    tr.remove();
+                    recalc()
+                })
+                // make link clickable when typed
+            const linkInput = tr.querySelector('.link')
+            linkInput.addEventListener('change', () => {
+                const val = linkInput.value.trim()
+                if (val && !/^https?:\/\//i.test(val)) linkInput.value = 'https://' + val
+            })
+            recalc()
+        })
+
+        removeTableBtn.addEventListener('click', () => {
+            if (!confirm('Remover essa tabela?')) return
+            card.remove()
+        })
+
+        // Inline edit title saves to dataset
+        titleInput.addEventListener('input', () => {
+            card.dataset.title = titleInput.value
+        })
+
+        // initial recalc
+        recalc()
+    }
+
+    // Actions
+    document.getElementById('newTableBtn').addEventListener('click', () => {
+        const id = uid()
+        const card = createTableCard(id)
+        container.prepend(card)
+            // auto add one sample row
+        card.querySelector('.addRow').click()
+    })
+
+    document.getElementById('exportAll').addEventListener('click', () => {
+        const data = []
+        document.querySelectorAll('.table-card').forEach(card => {
+            const title = card.querySelector('.title').value
+            const rows = []
+            card.querySelectorAll('tbody tr').forEach(tr => {
+                const name = tr.querySelector('.name').value
+                const link = tr.querySelector('.link').value
+                const tipo = tr.querySelector('.tipo').value
+                const price = parseFloat(String(tr.querySelector('.price').value).replace(',', '.')) || 0
+                rows.push({
+                    name,
+                    link,
+                    tipo,
+                    price
+                })
+            })
+            const total = parseFloat(card.dataset.total) || 0
+            data.push({
+                id: card.dataset.id,
+                title,
+                rows,
+                total
+            })
+        })
+        const blob = new Blob([JSON.stringify(data, null, 2)], {
+            type: 'application/json'
+        })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'tabelas.json'
+        a.click()
+        URL.revokeObjectURL(url)
+    })
+
+    // create an initial table
+    document.getElementById('newTableBtn').click()
+</script>
+</body>
+
+</html>
+<footer>Feito rápido — clique em uma tabela para editar título. Preço em reais (use ponto ou vírgula). </footer>
+
+<script>
+    // Helpers
+    if (typeof formatBRL === 'undefined') {
+        const formatBRL = v => {
+            if (isNaN(v)) return 'R$ 0,00'
+            return v.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            })
+        }
+    }
+    if (isNaN(v)) return 'R$ 0,00'
+    return v.toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+    })
+
+
+    if (typeof uid === 'undefined') {
+        const uid = () => Math.random().toString(36).slice(2, 9)
+    }
+
+    // Templates
+    function createTableCard(id, title = 'Tabela ' + (document.querySelectorAll('.table-card').length + 1)) {
+        const card = document.createElement('div')
+        card.className = 'table-card'
+        card.dataset.id = id
+        card.innerHTML = `
+        <div class="table-head">
+          <input class="title" value="${escapeHtml(title)}" />
+          <div class="controls">
+            <button class="addRow">+ Linha</button>
+            <button class="removeTable secondary">Remover</button>
+          </div>
+        </div>
+        <div class="table-body">
+          <table>
+            <thead>
+              <tr><th>Nome</th><th>Link</th><th>Tipo</th><th>Preço (R$)</th><th></th></tr>
+            </thead>
+            <tbody class="tbody"></tbody>
+          </table>
+          <div class="empty">Nenhuma linha — clique em "+ Linha" para adicionar.</div>
+          <div class="summary">Total: <div class="total">R$ 0,00</div></div>
+        </div>
+      `
+        attachTableListeners(card)
+        return card
+    }
+
+    function escapeHtml(s) {
+        return (s + '').replace(/[&<>"']/g, c => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": "&#39;"
+        })[c])
+    }
+
+    // Core
+    // let container; // Remove this line if 'container' is already declared
+    if (!container) {
+        container = document.getElementById('tablesContainer');
+    }
+
+    function attachTableListeners(card) {
+        const addRowBtn = card.querySelector('.addRow')
+        const removeTableBtn = card.querySelector('.removeTable')
+        const tbody = card.querySelector('.tbody')
+        const empty = card.querySelector('.empty')
+        const totalEl = card.querySelector('.total')
+        const titleInput = card.querySelector('.title')
+
+        function recalc() {
+            const rows = Array.from(tbody.querySelectorAll('tr'))
+            let sum = 0
+            rows.forEach(tr => {
+                const priceInput = tr.querySelector('.price')
+                let v = parseFloat(String(priceInput.value).replace(',', '.'))
+                if (isNaN(v)) v = 0
+                sum += v
+            })
+            totalEl.textContent = formatBRL(sum)
+            card.dataset.total = String(sum)
+            empty.style.display = rows.length ? 'none' : 'block'
+        }
+
+        addRowBtn.addEventListener('click', () => {
+            const tr = document.createElement('tr')
+            tr.innerHTML = `
+          <td><input class="name" type="text" placeholder="Nome" /></td>
+          <td><input class="link" type="text" placeholder="https://..." /></td>
+          <td><input class="tipo" type="text" placeholder="Tipo" /></td>
+          <td><input class="price" type="number" step="0.01" placeholder="0.00" /></td>
+          <td class="row-actions"><button class="del">Excluir</button></td>
+        `
+            tbody.appendChild(tr)
+                // events
+            tr.querySelector('.price').addEventListener('input', recalc)
+            tr.querySelector('.del').addEventListener('click', () => {
+                    tr.remove();
+                    recalc()
+                })
+                // make link clickable when typed
+            const linkInput = tr.querySelector('.link')
+            linkInput.addEventListener('change', () => {
+                const val = linkInput.value.trim()
+                if (val && !/^https?:\/\//i.test(val)) linkInput.value = 'https://' + val
+            })
+            recalc()
+        })
+
+        removeTableBtn.addEventListener('click', () => {
+            if (!confirm('Remover essa tabela?')) return
+            card.remove()
+        })
+
+        // Inline edit title saves to dataset
+        titleInput.addEventListener('input', () => {
+            card.dataset.title = titleInput.value
+        })
+
+        // initial recalc
+        recalc()
+    }
+
+    // Actions
+    document.getElementById('newTableBtn').addEventListener('click', () => {
+        const id = uid()
+        const card = createTableCard(id)
+        container.prepend(card)
+            // auto add one sample row
+        card.querySelector('.addRow').click()
+    })
+
+    document.getElementById('exportAll').addEventListener('click', () => {
+        const data = []
+        document.querySelectorAll('.table-card').forEach(card => {
+            const title = card.querySelector('.title').value
+            const rows = []
+            card.querySelectorAll('tbody tr').forEach(tr => {
+                const name = tr.querySelector('.name').value
+                const link = tr.querySelector('.link').value
+                const tipo = tr.querySelector('.tipo').value
+                const price = parseFloat(String(tr.querySelector('.price').value).replace(',', '.')) || 0
+                rows.push({
+                    name,
+                    link,
+                    tipo,
+                    price
+                })
+            })
+            const total = parseFloat(card.dataset.total) || 0
+            data.push({
+                id: card.dataset.id,
+                title,
+                rows,
+                total
+            })
+        })
+        const blob = new Blob([JSON.stringify(data, null, 2)], {
+            type: 'application/json'
+        })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'tabelas.json'
+        a.click()
+        URL.revokeObjectURL(url)
+    })
+
+    // create an initial table
+    document.getElementById('newTableBtn').click()
+</script>
+</body>
+
+</html>
