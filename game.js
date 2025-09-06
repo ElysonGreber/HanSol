@@ -449,30 +449,30 @@ const lvlppDiv = document.getElementById("lvlpp");
     showGameModal()
     // modal.classList.remove('hidden'); 
     // modal.style.display = "block";
-   const moveImages = {
-  Rock: "rock.png",
-  Paper: "paper.png",
-  Scissors: "SS.png"
-};
-
-      
-let moves = ["Rock", "Paper", "Scissors"];
-
-// player move
-let playerChoice = moves[playerMove];
-playerMoveDisplay.innerHTML = `<img src="${moveImages[playerChoice]}" alt="${playerChoice}" width="80">`;
-
-// limpa o resultado
-roundResult.innerText = "";
-
-// anima alternando o contrato
-let idx = 0;
-const interval = setInterval(() => {
+    const moveImages = {
+          Rock: "rock.png",
+          Paper: "paper.png",
+          Scissors: "SS.png"
+        };
+    
+          
+    // let moves = ["Rock", "Paper", "Scissors"];
+    
+    // player move
+    let playerChoice = moves[playerMove];
+    playerMoveDisplay.innerHTML = `<img src="${moveImages[playerChoice]}" alt="${playerChoice}" width="80">`;
+    
+    // limpa o resultado
+    roundResult.innerText = "";
+    
+    // anima alternando o contrato
+    let idx = 0;
+    const interval = setInterval(() => {
     let currentMove = moves[idx % 3];
       contractMoveDisplay.innerHTML = `<img src="${moveImages[currentMove]}" alt="${currentMove}" width="80">`;
       idx++;
     }, 
-    2000);        
+    200);        
 
     try {
       // envia transação
@@ -489,41 +489,38 @@ const interval = setInterval(() => {
       
 
       const txDetails = await connection.getTransaction(signature, { commitment: "confirmed" });
+      let tx_result = txDetails.transaction.message.instructions[2];
 
       // aqui supondo que o contrato retorna um log com o move
       const logs = txDetails.meta?.logMessages || [];
-      const contractMoveIndex = parseInt(logs.find(l => l.includes("ContractMove:"))?.split(":")[1] || 0);
-      const contractMove = moves[contractMoveIndex];
+      const contractMoveIndex = tx_result.programIdIndex - 1;
+      const contractMove = MOVES[contractMoveIndex];
 
-
-      console.log(txDetails, contractMoveIndex, contractMove)
         
       // para a animação e mostra o resultado real
       clearInterval(interval);
-      contractMoveDisplay.innerText = contractMove;
+      // contractMoveDisplay.innerText = contractMove;
 
 
         
       // resultado da rodada
-      let outcome;
-      if (playerMove === contractMoveIndex) outcome = "Draw";
-      else if (
-        (playerMove === 0 && contractMoveIndex === 2) || // Rock vence Scissors
-        (playerMove === 1 && contractMoveIndex === 0) || // Paper vence Rock
-        (playerMove === 2 && contractMoveIndex === 1)    // Scissors vence Paper
-      ) {
-        outcome = "Won";
-      } else {
-        outcome = "Lose";
-      }
+      const RESUTLT_BOARD = {
+          0: "Lose",
+          1: "Draw",
+          2: "Won"
+      };
+      let outcome = RESULT_BOARD[tx_result.stackHeight];
       roundResult.innerText = outcome;
+
+      contractMoveDisplay.innerHTML = `<img src="${moveImages[contractMove]}" alt="${contractMove}" width="80">`;
+        
       await updateScore();
       await updateHistory();
 
     } catch (e) {
-      clearInterval(interval);
-      contractMoveDisplay.innerText = "Error";
-      roundResult.innerText = e.message;
+          clearInterval(interval);
+          contractMoveDisplay.innerText = "Error";
+          roundResult.innerText = e.message;
     } finally {
       btn.disabled = false;
     }
