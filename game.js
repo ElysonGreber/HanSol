@@ -1,15 +1,21 @@
 (async() => {
     const { PublicKey, Connection, Transaction, SystemProgram, TransactionInstruction } = solanaWeb3;
 
+    const MOVES = {
+        0: "Rock",
+        1: "Paper",
+        2: "Scissors"
+    }
     const PROGRAM_ID = new PublicKey("BEGGHHUjM1u3okqQreDkqM11y7hhk1amfBrWDQTN4XhJ");
     const NETWORK = "https://crimson-withered-aura.solana-devnet.quiknode.pro/d77410756a6a1e3b01afdb3a3d008812c6bba779/";
     const connection = new Connection(NETWORK, "confirmed");
 
     const connectBtn = document.getElementById("connectBtn");
 
-document.querySelectorAll(".connectBtn").forEach(btn => {
-    btn.onclick = connectBtn.onclick;
-});
+    document.querySelectorAll(".connectBtn").forEach(btn => {
+        btn.onclick = connectBtn.onclick;
+    });
+
     const walletInfo = document.getElementById("walletInfo");
     const walletBalance = document.getElementById("walletBalance");
     const gameDiv = document.getElementById("game");
@@ -232,6 +238,7 @@ document.querySelectorAll(".connectBtn").forEach(btn => {
         const [pda] = await getPDA(publicKey);
         try {
             const accountInfo = await connection.getAccountInfo(pda);
+            console.log(accountInfo);
             if (!accountInfo) {
                 scoreDiv.innerText = "Score: 0 (conta PDA não existe)";
                 return 0;
@@ -448,6 +455,7 @@ const lvlppDiv = document.getElementById("lvlpp");
   Scissors: "SS.png"
 };
 
+      
 let moves = ["Rock", "Paper", "Scissors"];
 
 // player move
@@ -460,10 +468,11 @@ roundResult.innerText = "";
 // anima alternando o contrato
 let idx = 0;
 const interval = setInterval(() => {
-  let currentMove = moves[idx % 3];
-  contractMoveDisplay.innerHTML = `<img src="${moveImages[currentMove]}" alt="${currentMove}" width="80">`;
-  idx++;
-}, 200);        
+    let currentMove = moves[idx % 3];
+      contractMoveDisplay.innerHTML = `<img src="${moveImages[currentMove]}" alt="${currentMove}" width="80">`;
+      idx++;
+    }, 
+    2000);        
 
     try {
       // envia transação
@@ -477,8 +486,7 @@ const interval = setInterval(() => {
       const signature = await connection.sendRawTransaction(signedTx.serialize());
       await connection.confirmTransaction(signature, "confirmed");
 
-      await updateScore();
-      await updateHistory();
+      
 
       const txDetails = await connection.getTransaction(signature, { commitment: "confirmed" });
 
@@ -487,10 +495,15 @@ const interval = setInterval(() => {
       const contractMoveIndex = parseInt(logs.find(l => l.includes("ContractMove:"))?.split(":")[1] || 0);
       const contractMove = moves[contractMoveIndex];
 
+
+      console.log(txDetails, contractMoveIndex, contractMove)
+        
       // para a animação e mostra o resultado real
       clearInterval(interval);
       contractMoveDisplay.innerText = contractMove;
 
+
+        
       // resultado da rodada
       let outcome;
       if (playerMove === contractMoveIndex) outcome = "Draw";
@@ -504,6 +517,8 @@ const interval = setInterval(() => {
         outcome = "Lose";
       }
       roundResult.innerText = outcome;
+      await updateScore();
+      await updateHistory();
 
     } catch (e) {
       clearInterval(interval);
