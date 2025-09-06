@@ -238,7 +238,7 @@
         const [pda] = await getPDA(publicKey);
         try {
             const accountInfo = await connection.getAccountInfo(pda);
-            console.log(accountInfo);
+
             if (!accountInfo) {
                 scoreDiv.innerText = "Score: 0 (conta PDA não existe)";
                 return 0;
@@ -437,7 +437,7 @@ const lvlppDiv = document.getElementById("lvlpp");
 
     //==========================================================================// 
     document.querySelectorAll(".moveBtn").forEach(btn => {
-  btn.addEventListener("click", async () => {
+    btn.addEventListener("click", async () => {
     const playerMove = parseInt(btn.getAttribute("data-move"));
     btn.disabled = true;
 
@@ -459,7 +459,7 @@ const lvlppDiv = document.getElementById("lvlpp");
     // let moves = ["Rock", "Paper", "Scissors"];
     
     // player move
-    let playerChoice = moves[playerMove];
+    let playerChoice = MOVES[parseInt(playerMove)];
     playerMoveDisplay.innerHTML = `<img src="${moveImages[playerChoice]}" alt="${playerChoice}" width="80">`;
     
     // limpa o resultado
@@ -468,7 +468,7 @@ const lvlppDiv = document.getElementById("lvlpp");
     // anima alternando o contrato
     let idx = 0;
     const interval = setInterval(() => {
-    let currentMove = moves[idx % 3];
+    let currentMove = MOVES[idx % 3];
       contractMoveDisplay.innerHTML = `<img src="${moveImages[currentMove]}" alt="${currentMove}" width="80">`;
       idx++;
     }, 
@@ -504,7 +504,7 @@ const lvlppDiv = document.getElementById("lvlpp");
 
         
       // resultado da rodada
-      const RESUTLT_BOARD = {
+      const RESULT_BOARD = {
           0: "Lose",
           1: "Draw",
           2: "Won"
