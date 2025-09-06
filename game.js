@@ -65,7 +65,7 @@
     //==========================================================================// 
 
     function parseHistory(data) {
-        console.log(data)
+
         if (data.length < DATA_SIZE) return [];
 
         const history_len = data[SCORE_SIZE];
@@ -390,6 +390,7 @@ const lvlppDiv = document.getElementById("lvlpp");
             renderHistoryPage(currentPage);
 
             renderCharts(fullHistory);
+            return fullHistory;
 
         } catch (e) {
             historyListDiv.innerHTML = "<em>Error fetching history</em>";
@@ -487,7 +488,7 @@ const lvlppDiv = document.getElementById("lvlpp");
       const signature = await connection.sendRawTransaction(signedTx.serialize());
       await connection.confirmTransaction(signature, "confirmed");
 
-      clearInterval(interval);
+      
 
       const txDetails = await connection.getTransaction(signature, { commitment: "confirmed" });
       let tx_result = txDetails.transaction.message.instructions[2];
@@ -497,19 +498,14 @@ const lvlppDiv = document.getElementById("lvlpp");
 
         
       await updateScore();
-      await updateHistory();
-
-      let pk = new PublicKey(publicKey);
-      let [pda] = await getPDA(pk);
-      let accountInfo = await connection.getAccountInfo(pda);
-      let last_result = await parseHistory(accountInfo);
-
+      let last_result = await updateHistory();
+      
       console.log(last_result)
-      const contractMove = last_result[last_result.length-1].programMove
+      const contractMove = last_result[0].programMove
         
       // para a animação e mostra o resultado real
-      
-      // contractMoveDisplay.innerText = contractMove;
+      clearInterval(interval);
+      contractMoveDisplay.innerText = contractMove;
         
       // resultado da rodada
       // const RESULT_BOARD = {
@@ -517,8 +513,8 @@ const lvlppDiv = document.getElementById("lvlpp");
       //     1: "Draw",
       //     2: "Won"
       // };
-      let outcome = last_result[last_result.length-1].result
-      // roundResult.innerText = outcome;
+      let outcome = last_result[0].result;
+      roundResult.innerText = outcome;
 
      let logHtml = `
               <div class="tx-logint">
