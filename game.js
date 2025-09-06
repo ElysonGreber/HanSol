@@ -443,17 +443,17 @@ const lvlppDiv = document.getElementById("lvlpp");
 
     // abrir modal
     const modal = document.getElementById("gameModal");
-    const playerMoveDisplay = document.getElementById("playerMoveDisplay");
-    const contractMoveDisplay = document.getElementById("contractMoveDisplay");
-    const roundResult = document.getElementById("roundResult");
+    let playerMoveDisplay = document.getElementById("playerMoveDisplay");
+    let contractMoveDisplay = document.getElementById("contractMoveDisplay");
+    let roundResult = document.getElementById("roundResult");
     showGameModal()
     // modal.classList.remove('hidden'); 
     // modal.style.display = "block";
     const moveImages = {
-          Rock: "rock.png",
-          Paper: "paper.png",
-          Scissors: "SS.png"
-        };
+      Rock: "rock.png",
+      Paper: "paper.png",
+      Scissors: "SS.png"
+    };
     
           
     // let moves = ["Rock", "Paper", "Scissors"];
@@ -472,7 +472,7 @@ const lvlppDiv = document.getElementById("lvlpp");
       contractMoveDisplay.innerHTML = `<img src="${moveImages[currentMove]}" alt="${currentMove}" width="80">`;
       idx++;
     }, 
-    200);        
+    300);        
 
     try {
       // envia transação
@@ -492,30 +492,52 @@ const lvlppDiv = document.getElementById("lvlpp");
       let tx_result = txDetails.transaction.message.instructions[2];
 
       // aqui supondo que o contrato retorna um log com o move
-      const logs = txDetails.meta?.logMessages || [];
-      const contractMoveIndex = tx_result.programIdIndex - 1;
-      const contractMove = MOVES[contractMoveIndex];
+      // const logs = txDetails.meta?.logMessages || [];
 
+        
+      await updateScore();
+      await updateHistory();
+
+      let pk = new PublicKey(publicKey)
+      let [pda] = await getPDA(pk)
+      let accountInfo = await connection.getAccountInfo(pda);
+      let last_result = parseHistory(accountInfo);
+      
+      const contractMove = last_result[last_result.length-1].programMove
         
       // para a animação e mostra o resultado real
       clearInterval(interval);
       // contractMoveDisplay.innerText = contractMove;
-
-
         
       // resultado da rodada
-      const RESULT_BOARD = {
-          0: "Lose",
-          1: "Draw",
-          2: "Won"
-      };
-      let outcome = RESULT_BOARD[tx_result.stackHeight];
-      roundResult.innerText = outcome;
+      // const RESULT_BOARD = {
+      //     0: "Lose",
+      //     1: "Draw",
+      //     2: "Won"
+      // };
+      let outcome = last_result[last_result.length-1].result
+      // roundResult.innerText = outcome;
+
+     let logHtml = `
+              <div class="tx-logint">
+                <h3>Transaction Log</h3>
+                <p><strong>Signature:</strong> ${signature}</p>
+                <p><strong>Slot:</strong> ${txDetails.slot}</p>
+                <p><strong>Status:</strong> ${txDetails.meta?.err ? "Failed" : "Confirmed"}</p>
+                <p><strong>Fee paid:</strong> ${(txDetails.meta?.fee || 0) / 1e9} SOL</p>
+
+                <h4>Program Logs</h4>
+                <pre>${(txDetails.meta?.logMessages || []).join("\n")}</pre>
+
+                <p><a href="https://explorer.solana.com/tx/${signature}?cluster=devnet" target="_blank">
+                  View on Solana Explorer
+                </a></p>
+              </div>
+            `;
 
       contractMoveDisplay.innerHTML = `<img src="${moveImages[contractMove]}" alt="${contractMove}" width="80">`;
-        
-      await updateScore();
-      await updateHistory();
+      document.getElementById("txLog").innerHTML = logHtml;  
+    
 
     } catch (e) {
           clearInterval(interval);
