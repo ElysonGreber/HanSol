@@ -65,6 +65,7 @@
     //==========================================================================// 
 
     function parseHistory(data) {
+        console.log(data)
         if (data.length < DATA_SIZE) return [];
 
         const history_len = data[SCORE_SIZE];
@@ -438,8 +439,8 @@ const lvlppDiv = document.getElementById("lvlpp");
     //==========================================================================// 
     document.querySelectorAll(".moveBtn").forEach(btn => {
     btn.addEventListener("click", async () => {
-    const playerMove = parseInt(btn.getAttribute("data-move"));
-    btn.disabled = true;
+        const playerMove = parseInt(btn.getAttribute("data-move"));
+        btn.disabled = true;
 
     // abrir modal
     const modal = document.getElementById("gameModal");
@@ -486,7 +487,7 @@ const lvlppDiv = document.getElementById("lvlpp");
       const signature = await connection.sendRawTransaction(signedTx.serialize());
       await connection.confirmTransaction(signature, "confirmed");
 
-      
+      clearInterval(interval);
 
       const txDetails = await connection.getTransaction(signature, { commitment: "confirmed" });
       let tx_result = txDetails.transaction.message.instructions[2];
@@ -498,15 +499,16 @@ const lvlppDiv = document.getElementById("lvlpp");
       await updateScore();
       await updateHistory();
 
-      let pk = new PublicKey(publicKey)
-      let [pda] = await getPDA(pk)
+      let pk = new PublicKey(publicKey);
+      let [pda] = await getPDA(pk);
       let accountInfo = await connection.getAccountInfo(pda);
-      let last_result = parseHistory(accountInfo);
-      
+      let last_result = await parseHistory(accountInfo);
+
+      console.log(last_result)
       const contractMove = last_result[last_result.length-1].programMove
         
       // para a animação e mostra o resultado real
-      clearInterval(interval);
+      
       // contractMoveDisplay.innerText = contractMove;
         
       // resultado da rodada
