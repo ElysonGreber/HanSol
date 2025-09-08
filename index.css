@@ -7,7 +7,7 @@
     background: radial-gradient(1200px 600px at 50% -10%, rgba(34, 197, 94, 0.15), transparent 60%), linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.98));
     backdrop-filter: blur(2px);
     z-index: 9999;
-    /* transition: opacity 280ms ease, visibility 280ms ease; */
+    transition: opacity 280ms ease, visibility 280ms ease;
 }
 
 #playerMoveDisplay,
@@ -17,21 +17,20 @@
 }
 
 #playerMoveDisplay img {
-    width: 150%;
-    left: -50%;
-    position: relative;
+    width: 100%;
 }
 
 #contractMoveDisplay img {
-    width: 150%;
-    right: -20%;
-    position: relative;
+    width: 100%;
     transform: scaleX(-1);
 }
 
 .result {
     text-align: center;
-    font-size: 30px;
+    font-size: 100px;
+    position: absolute;
+    bottom: 37%;
+    LEFT: 40%;
 }
 
 .gamecard-header {
@@ -48,8 +47,8 @@
     color: #fff;
     display: flex;
     FONT-WEIGHT: 500;
-    width: 80%;
-    height: 800px;
+    width: 70%;
+    height: 401px;
     background: var(--panel);
     /* background: #fff1a6; */
     border: 1px solid rgba(148, 163, 184, 0.15);
@@ -62,18 +61,20 @@
 }
 
 .modal-body {
-    display: grid;
+    display: flex;
     grid-template-columns: repeat(2, 1fr);
     gap: 80px;
     height: 100%;
-    align-items: end;
+    align-items: center;
     width: 100%;
     padding: 20px;
+    flex-direction: row;
+    justify-content: space-around;
 }
 
 .player-choice,
 .contract-choice {
-    /* width: 45%; */
+    width: 100%;
 }
 
 .close {
@@ -89,14 +90,14 @@
     display: flex;
     FONT-WEIGHT: 500;
     width: 100%;
-    height: 450px;
+    height: 500px;
     background: var(--panel);
     /* background-image: url(bg.png); */
     background-size: 60%;
     background-position: center;
     background-repeat: no-repeat;
     /* background: #fff1a6; */
-    border: 1px solid rgba(148, 163, 184, 0.15);
+    border: 1px solid rgb(117 0 255);
     border-radius: 20px;
     box-shadow: 0 20px 20px rgba(0, 0, 0, 0.45);
     overflow: hidden;
@@ -105,6 +106,27 @@
     justify-content: space-between;
     align-items: center;
     text-align: center;
+}
+
+.rnk2 {
+    background-image: url(nft01.png);
+    background-size: contain;
+    background-size: 379px;
+    background-position: bottom;
+}
+
+.rnk1 {
+    background-image: url(nft02.png);
+    background-size: contain;
+    background-size: 379px;
+    background-position: bottom;
+}
+
+.rnk3 {
+    background-image: url(nft03.png);
+    background-size: contain;
+    background-size: 379px;
+    background-position: bottom;
 }
 
 #segundo .rtopnick {
@@ -116,18 +138,18 @@
 
 #segundo .rtopplace {
     font-size: 20px;
-    padding: 20px;
+    padding: 3px;
     width: 100%;
     text-align: center;
-    background: #15ff004d;
+    /* background: #0005ff4d; */
 }
 
 #segundo .rtopp {
     font-size: 20px;
-    padding: 20px;
+    padding: 3px;
     width: 100%;
     text-align: center;
-    background: #15ff004d;
+    background: #070032f2;
 }
 
 #primeiro {
@@ -144,18 +166,18 @@
 
 #primeiro .rtopplace {
     font-size: 20px;
-    padding: 20px;
+    padding: 3px;
     width: 100%;
     text-align: center;
-    background: #15ff004d;
+    /* background: #0005ff4d; */
 }
 
 #primeiro .rtopp {
     font-size: 20px;
-    padding: 20px;
+    padding: 3px;
     width: 100%;
     text-align: center;
-    background: #15ff004d;
+    background: #070032f2;
 }
 
 #terceiro .rtopnick {
@@ -167,18 +189,18 @@
 
 #terceiro .rtopplace {
     font-size: 20px;
-    padding: 20px;
+    padding: 3px;
     width: 100%;
     text-align: center;
-    background: #15ff004d;
+    /* background: #0005ff4d; */
 }
 
 #terceiro .rtopp {
     font-size: 20px;
-    padding: 20px;
+    padding: 3px;
     width: 100%;
     text-align: center;
-    background: #15ff004d;
+    background: #070032f2;
 }
 
 
@@ -201,10 +223,13 @@
 .rnk-cards {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 80px;
+    gap: 86px;
     height: 600px;
     align-items: end;
+    /* background: azure; */
     width: 100%;
+    padding-left: 20px;
+    padding-right: 20px;
 }
 
 .tx-log {
@@ -372,7 +397,7 @@ h4 {
 }
 
 .moveBtn {
-    background-color: #FFCF77;
+    background-color: #664306b3;
     border: none;
     color: black;
     /* padding: 10px 20px; */
@@ -493,6 +518,10 @@ h4 {
     width: 100%;
     justify-content: space-evenly;
     max-width: 640px;
+    border: 0px solid #00000000;
+    background-color: #0a0c0c0f;
+    border-radius: 20px;
+    padding: 5px;
 }
 
 .hd10sup {
@@ -526,6 +555,7 @@ h4 {
     display: flex;
     align-items: center;
     flex-direction: column;
+    background-color: rgba(0, 0, 0, 0.4);
 }
 
 .home-navbar {
@@ -740,6 +770,7 @@ h4 {
     flex-direction: column;
     padding-bottom: 80px;
     gap: 20px;
+    background: linear-gradient(90deg, rgb(39 39 45 / 72%) 0%, rgb(91 87 199 / 47%) 50%, rgb(39 39 45) 100%);
 }
 
 .home-heading10 {
@@ -789,6 +820,7 @@ h4 {
     padding-left: var(--dl-layout-space-fiveunits);
     padding-right: var(--dl-layout-space-fiveunits);
     max-width: 1440px;
+    background: linear-gradient(90deg, rgb(39 39 45 / 72%) 0%, rgb(91 87 199 / 47%) 50%, rgb(39 39 45) 100%);
 }
 
 .ds {
@@ -1565,7 +1597,7 @@ h4 {
 
 .home-header17 {
     color: rgb(255, 255, 255);
-    font-size: 72px;
+    font-size: 46px;
     font-style: normal;
     font-weight: 500;
     letter-spacing: 1px;
@@ -3269,6 +3301,7 @@ h4 {
 
 #rankingTableContainer {
     width: 100%;
+    text-align: center;
 }
 
 .ranking-table th,
@@ -3297,7 +3330,8 @@ h4 {
 }
 
 .hconteiner {
-    box-shadow: 0 20px 20px rgba(0, 0, 0, 0.45);
+    /* box-shadow: 0 20px 20px rgba(0, 0, 0, 0.45); */
+    background: border-box;
 }
 
 #walletBalance {
@@ -3469,4 +3503,55 @@ h4 {
     border: solid 1px black;
     border-radius: 20px;
     box-shadow: 5px 6px 0px 0px #000000;
+}
+
+@property --＠color-1 {
+    syntax: "<color>";
+    inherits: false;
+    initial-value: hsl(98 100% 62%);
+}
+
+@property --＠color-2 {
+    syntax: "<color>";
+    inherits: false;
+    initial-value: hsl(204 100% 59%);
+}
+
+
+/* keyframes that change the color variable */
+
+@keyframes gradient-change {
+    to {
+        --＠color-1: hsl(210 100% 59%);
+        --＠color-2: hsl(310 100% 59%);
+    }
+}
+
+.home-heading10,
+.rtopplace h3,
+.rtopnick p,
+.rtopp p,
+.home-header17 {
+    /* apply variable changes over time */
+    animation: gradient-change 2s linear infinite alternate;
+    background: linear-gradient(/* 
+        in oklch produces more vibrant gradient results 
+        learn more https://developer.chrome.com/docs/css-ui/access-colors-spaces#color_interpolation
+      */
+    to right in oklch, /* use the variables in a gradient (or wherever!) */
+    var(--＠color-1), var(--＠color-2));
+    /* old browser support */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    /* modern browser version */
+    background-clip: text;
+    color: transparent;
+}
+
+.secondary-btnsmall {
+    cursor: pointer;
+}
+
+.rhbg {
+    background: linear-gradient(90deg, rgb(39 39 45 / 72%) 0%, rgb(33 14 86 / 51%) 50%, rgb(39 39 45) 100%);
 }
