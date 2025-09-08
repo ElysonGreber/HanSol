@@ -894,8 +894,8 @@ document.querySelectorAll(".connectBtn").forEach(btn => {
         // preencher cada div (se existir no HTML)
         if (top3[0]) {
             document.getElementById("primeiro").innerHTML = `
-                    <div class="rtopplace"><h3>1º</h3></div>
-                    <div>
+                    <div class="rtopplace"><h3 style="font-size: 35px;">1º</h3></div>
+                    <div style="height: 95%;">
                      <div class="rtopnick"><p> ${top3[0].nickname}</p></div>
                     <div class="rtopk"><p> ${maskPubkey(top3[0].pubkey)}</p></div>
                     </div>
@@ -908,7 +908,7 @@ document.querySelectorAll(".connectBtn").forEach(btn => {
             document.getElementById("segundo").innerHTML = `
               
                     <div class="rtopplace"><h3>2º</h3></div>
-                    <div>
+                    <div style="height: 95%;">
                     <div class="rtopnick"><p> ${top3[1].nickname}</p></div>
                     <div class="rtopk"><p> ${maskPubkey(top3[1].pubkey)}</p></div>
                     </div>
@@ -921,7 +921,7 @@ document.querySelectorAll(".connectBtn").forEach(btn => {
             document.getElementById("terceiro").innerHTML = `
 
                     <div class="rtopplace"><h3>3º</h3></div>
-                    <div>
+                    <div style="height: 95%;">
                      <div class="rtopnick"><p> ${top3[2].nickname}</p></div>
                     <div class="rtopk"><p> ${maskPubkey(top3[2].pubkey)}</p></div>
                     </div>
