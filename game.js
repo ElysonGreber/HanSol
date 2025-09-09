@@ -438,43 +438,75 @@ const lvlppDiv = document.getElementById("lvlpp");
     }
 
     //==========================================================================// 
-    document.querySelectorAll(".moveBtn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-        const playerMove = parseInt(btn.getAttribute("data-move"));
-        btn.disabled = true;
+// Certifique-se de ter SplitText + GSAP carregados e o plugin registrado
+gsap.registerPlugin(SplitText);
+
+// função utilitária robusta para mostrar e animar o resultado por palavras
+function showAnimatedOutcome(element, text) {
+  const safeText = String(text ?? "");
+
+  // cria um span novo para garantir DOM limpo
+  const span = document.createElement("span");
+  span.className = "outcome-text";
+  span.textContent = safeText;
+
+  // limpa o elemento e anexa o span novo
+  element.innerHTML = "";
+  element.appendChild(span);
+
+  // tenta reverter qualquer SplitText antigo
+  try { if (element._split) { element._split.revert(); element._split = null; } } catch(e) {}
+  try { if (span._split) { span._split.revert(); span._split = null; } } catch(e) {}
+  try { if (element._tl) { element._tl.kill(); element._tl = null; } } catch(e) {}
+
+  // cria novo SplitText sobre o span recém-criado (apenas words)
+  span._split = new SplitText(span, { type: "words" });
+
+  // anima as palavras (y, rotação) e um leve "scale punch"
+  element._tl = gsap.from(span._split.words, {
+    y: -24,
+    scale: 5.5,
+    opacity: 0,
+    rotation: "random(-30, 30)",
+    duration: 0.6,
+    ease: "back.out(1.4)",
+    stagger: 0.08
+  });
+}
+
+// ------------------- seu listener integrado -------------------
+document.querySelectorAll(".moveBtn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const playerMove = parseInt(btn.getAttribute("data-move"));
+    btn.disabled = true;
 
     // abrir modal
     const modal = document.getElementById("gameModal");
     let playerMoveDisplay = document.getElementById("playerMoveDisplay");
     let contractMoveDisplay = document.getElementById("contractMoveDisplay");
     let roundResult = document.getElementById("roundResult");
-    showGameModal()
-    // modal.classList.remove('hidden'); 
-    // modal.style.display = "block";
+    showGameModal();
+
     const moveImages = {
       Rock: "rock.png",
       Paper: "paper.png",
       Scissors: "SS.png"
     };
-    
-          
-    // let moves = ["Rock", "Paper", "Scissors"];
-    
+
     // player move
     let playerChoice = MOVES[parseInt(playerMove)];
     playerMoveDisplay.innerHTML = `<img src="${moveImages[playerChoice]}" alt="${playerChoice}" width="80">`;
-    
+
     // limpa o resultado
-    roundResult.innerText = "";
-    
+    roundResult.innerHTML = "";
+
     // anima alternando o contrato
     let idx = 0;
     const interval = setInterval(() => {
-    let currentMove = MOVES[idx % 3];
+      let currentMove = MOVES[idx % 3];
       contractMoveDisplay.innerHTML = `<img src="${moveImages[currentMove]}" alt="${currentMove}" width="80">`;
       idx++;
-    }, 
-    300);        
+    }, 300);
 
     try {
       // envia transação
@@ -488,59 +520,48 @@ const lvlppDiv = document.getElementById("lvlpp");
       const signature = await connection.sendRawTransaction(signedTx.serialize());
       await connection.confirmTransaction(signature, "confirmed");
 
-      
-
       const txDetails = await connection.getTransaction(signature, { commitment: "confirmed" });
-      let tx_result = txDetails.transaction.message.instructions[2];
 
-      // aqui supondo que o contrato retorna um log com o move
-      // const logs = txDetails.meta?.logMessages || [];
-
-        
       await updateScore();
       let last_result = await updateHistory();
-      
-      console.log(last_result)
-      const contractMove = last_result[0].programMove
-        
+
+      console.log("last_result:", last_result);
+
+      const contractMove = last_result[0].programMove;
+
       // para a animação e mostra o resultado real
       clearInterval(interval);
-      contractMoveDisplay.innerText = contractMove;
-        
-      // resultado da rodada
-      // const RESULT_BOARD = {
-      //     0: "Lose",
-      //     1: "Draw",
-      //     2: "Won"
-      // };
-      let outcome = last_result[0].result;
-      roundResult.innerText = outcome;
-
-     let logHtml = `
-              <div class="tx-logint">
-                <h3>Transaction Log</h3>
-                <p><strong>Signature:</strong> ${signature}</p>
-                <p><strong>Slot:</strong> ${txDetails.slot}</p>
-                <p><strong>Status:</strong> ${txDetails.meta?.err ? "Failed" : "Confirmed"}</p>
-                <p><strong>Fee paid:</strong> ${(txDetails.meta?.fee || 0) / 1e9} SOL</p>
-
-                <h4>Program Logs</h4>
-                <pre>${(txDetails.meta?.logMessages || []).join("\n")}</pre>
-
-                <p><a href="https://explorer.solana.com/tx/${signature}?cluster=devnet" target="_blank">
-                  View on Solana Explorer
-                </a></p>
-              </div>
-            `;
-
       contractMoveDisplay.innerHTML = `<img src="${moveImages[contractMove]}" alt="${contractMove}" width="80">`;
-      document.getElementById("txLog").innerHTML = logHtml;  
-    
+
+      // resultado da rodada
+      let outcome = last_result[0].result;
+      console.log("outcome:", outcome);
+
+      // mostra + anima sempre que houver resultado
+      showAnimatedOutcome(roundResult, outcome);
+
+      // log HTML
+      let logHtml = `
+        <div class="tx-logint">
+          <h3>Transaction Log</h3>
+          <p><strong>Signature:</strong> ${signature}</p>
+          <p><strong>Slot:</strong> ${txDetails.slot}</p>
+          <p><strong>Status:</strong> ${txDetails.meta?.err ? "Failed" : "Confirmed"}</p>
+          <p><strong>Fee paid:</strong> ${(txDetails.meta?.fee || 0) / 1e9} SOL</p>
+          <h4>Program Logs</h4>
+          <pre>${(txDetails.meta?.logMessages || []).join("\n")}</pre>
+          <p><a href="https://explorer.solana.com/tx/${signature}?cluster=devnet" target="_blank">
+            View on Solana Explorer
+          </a></p>
+        </div>
+      `;
+      document.getElementById("txLog").innerHTML = logHtml;
 
     } catch (e) {
-          clearInterval(interval);
-          contractMoveDisplay.innerText = "Error";
-          roundResult.innerText = e.message;
+      clearInterval(interval);
+      contractMoveDisplay.innerText = "Error";
+      // anima a mensagem de erro também
+      showAnimatedOutcome(roundResult, e.message || "Erro desconhecido");
     } finally {
       btn.disabled = false;
     }
@@ -810,7 +831,50 @@ document.querySelectorAll(".connectBtn").forEach(btn => {
             firebaseStatus.innerText = "Erro ao registrar no Firebase: " + e.message;
         }
     };
+//==========//
+// Seleciona todos os botões
+const buttons = document.querySelectorAll(".moveBtn");
 
+buttons.forEach(btn => {
+  // hover enter
+  btn.addEventListener("mouseenter", () => {
+    gsap.to(btn, {
+      y: -10,              // sobe
+      scale: 1.1,          // aumenta
+      rotation: 5,          // pequena rotação
+      boxShadow: "10px 12px 15px rgba(0,0,0,0.5)", // sombra mais intensa
+      duration: 0.3,
+      ease: "power2.out"
+    });
+  });
+
+  // hover leave
+  btn.addEventListener("mouseleave", () => {
+    gsap.to(btn, {
+      y: 0,
+      scale: 1,
+      rotation: 0,
+      boxShadow: "5px 6px 0px 0px #000000", // sombra original
+      duration: 0.3,
+      ease: "power2.inOut"
+    });
+  });
+
+  // clique rápido (opcional: feedback de clique)
+  btn.addEventListener("mousedown", () => {
+    gsap.to(btn, {
+      scale: 0.95,
+      duration: 0.1
+    });
+  });
+
+  btn.addEventListener("mouseup", () => {
+    gsap.to(btn, {
+      scale: 1.1, // retorna ao hover scale
+      duration: 0.1
+    });
+  });
+});
     //==========================================================================// 
     function maskPubkey(pk) {
       if (typeof pk !== "string") return pk;
